@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body{
+            display: inline-flex;
+            padding-right: 300px;
+            font: 200 1em 'Segoe UI', 'Helvetica Neue', 'Droid Sans';
+        }
+        h1 {
+            font-weight: 300;
+        }
+        #container{
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+            border: 1px solid black;
+            position: relative;
+            background-color: gray;
+            opacity: 0.8;
+        }
+        #board{
+            position: absolute;
+            background-color: black;
+            border-radius: 5px;
+            width: 125px;
+            height: 15px;
+            bottom: 0px;
+            left: 250px;
+        }
+        #ball{
+            width: 25px;
+            height: 25px;
+            background-color: #ff0a19;
+            border-radius: 100%;
+            bottom: 15px;
+            left: 250px;
+            position: absolute;
+        }
+        #game-over{
+            width: 600px;
+            height: 400px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background-color: gray;
+            opacity: 0.5;
+        }
+
+        #restart{
+            border-radius: 5px;
+            width: 75px;
+            font-family: "Helvetica Neue Light", "HelveticaNeue-Light", "Helvetica Neue", Calibri, Helvetica, Arial, sans-serif;
+            font-weight: bold;
+            font-size: 125%;
+            height: 30px;
+            margin-left: 20px;
+        }
+        #score{
+            width: 150px;
+            height: 300px;
+            margin-left: 200px;
+            background-color: yellow;
+            padding-left: 50px;
+        }
+        h2{
+            margin-left: 30px;
+        }
+
+    </style>
+    <script>
+         document.addEventListener('DOMContentLoaded', function () {
+             var board = document.getElementById('board');
+             var container = document.getElementById('container');
+             var ball = document.getElementById('ball');
+             var position = 250;
+             var ballY = 15;
+             var ballX = 250;
+             var dirX = +1;
+             var dirY = +1;
+             var currentBound = 'bottom';
+             var touchedBottom = false;
+             var highScore = 0;
+             var score = 0;
+             startBall();
+             window.addEventListener('keydown',function(e){
+                     if (e.keyCode == 37) {
+                         if (position >0) {
+                             board.style.left = (position = position - 15) + 'px';
+                         }
+                         else {
+                             position = 0;
+                         }
+                     }
+                     if (e.keyCode == 39) {
+                         if (position < container.clientWidth - board.clientWidth ) {
+                             board.style.left = (position = position + 15) + 'px';
+                         }
+                         else{
+                             position = Math.abs(board.clientWidth-container.clientWidth);
+                         }
+                     }
+             });
+             document.getElementById('restart').addEventListener('click',function(){
+                document.getElementById('game-over').style.display = 'none';
+                 reset();
+                 startBall();
+             });
+             function startBall() {
+                 var movingBall = setInterval(function () {
+                     if (touchedBottom) {
+                         clearInterval(movingBall);
+                     }
+                     if (ballX <= container.clientWidth - ball.clientWidth && ballX >= 0 && ballY >= 0 && ballY <= container.clientHeight - ball.clientHeight) {
+                         ball.style.bottom = checkBoundary(ballY, ballX).height + 'px';
+                         ball.style.left = checkBoundary(ballY, ballX).side + 'px';
+//                     console.log(container.clientHeight - ball.clientHeight + ','+ballY);
+                     }
+
+                 }, 7);
+             }
+             function reset(){
+                 ballY = 15;
+                 ballX = 250;
+                 position = 250;
+                 dirX = +1;
+                 dirY = +1;
+                 currentBound = 'bottom';
+                 touchedBottom = false;
+                 score = 0;
+             }
+             function checkBoundary(h,s){
+                  if(s == 0){
+                      console.log('left wall ' + dirX + ','+dirY+','+currentBound);
+                      nextBounce(dirX,dirY,currentBound);
+                  }
+                 if(s == container.clientWidth - ball.clientWidth ){
+                     console.log('right wall ' + dirX + ','+dirY+','+currentBound);
+                         nextBounce(dirX,dirY,currentBound);
+                     }
+                 if(h == container.clientHeight - ball.clientHeight){
+                     console.log('top wall ' + dirX + ','+dirY+','+currentBound);
+                     nextBounce(dirX,dirY,currentBound);
+                 }
+                 if(h == 15 && (position - ball.clientWidth) <= ballX && (position+125 - ball.clientWidth) >= ballX ){
+                     console.log('bottom wall ' + dirX + ','+dirY+','+currentBound);
+                     nextBounce(dirX,dirY,currentBound);
+                     document.getElementsByClassName('target')[0].innerHTML = score;
+                     score++;
+                 }
+                 if(h==0){
+                     touchedBottom = true;
+                     if(score > highScore){
+                         highScore = score-1;
+                     }
+                     document.getElementById('game-over').style.display = 'flex';
+                     document.getElementsByClassName('high-score')[0].innerHTML = highScore;
+                 }
+                 this.height = (ballY = ballY + dirY);
+                 this.side = (ballX = ballX + dirX);
+                 return this;
+             }
+             function nextBounce(x,y,pos){
+                 //(x,y) go up
+                 if( x> 0 && y > 0){
+                     if(pos == 'bottom' && ballX == container.clientWidth-ball.clientWidth){
+                         dirX = -1;
+                         currentBound = 'right';
+                     }
+                     if(pos == 'bottom' && ballY == container.clientHeight-ball.clientHeight){
+                         dirY = -1;
+                         currentBound ='top';
+                     }
+                     if(pos == 'left'){
+                         dirY= -1;
+                        currentBound = 'top';
+                     }
+                 }
+                 //(-x,y)  go left
+                 if (x< 0 && y > 0){
+                     console.log('x '+ballX + ' pos' +pos);
+                     if(pos == 'bottom' && ballX ==0){
+                         dirX= +1;
+                         currentBound = 'left';
+                     }
+                     if(pos == 'bottom' && ballY==container.clientHeight - ball.clientHeight){
+                         dirY= -1;
+                         currentBound = 'top';
+                     }
+                     if(pos == 'right'){
+                         dirY= -1;
+                         currentBound = 'top';
+                     }
+                 }
+                 //(-x,-y) go bottom
+                 if (x < 0 && y < 0){
+                     if(pos == 'top' && ballY ==15)
+                     {
+                         dirY = +1;
+                         currentBound = 'bottom';
+                     }
+                     if(pos == 'top' && ballX ==0){
+                         dirX = +1;
+                         currentBound = 'left';
+                     }
+                     if(pos == 'right'){
+                         dirY =+1;
+                         currentBound = 'bottom';
+                     }
+                 }
+                 //(x,-y) go right
+                 if (x > 0 && y <0){
+                    if(pos == 'top' && ballX ==container.clientWidth-ball.clientWidth ){
+                        dirX = -1;
+                        currentBound= 'right';
+                    }
+                     if(pos == 'top' && ballY == 15){
+                         dirY = +1;
+                         currentBound = 'bottom';
+                     }
+                     if(pos =='left'){
+                         dirY= +1;
+                        currentBound = 'bottom';
+                     }
+                 }
+             }
+         });
+    </script>
+</head>
+<body>
+<div id="score">
+    <h1>Score</h1>
+    <h2 class="target">0</h2>
+    <h1>Highest Score</h1>
+    <h2 class="high-score">0</h2>
+</div>
+    <div id="container">
+        <div id="ball"></div>
+        <div id="board"></div>
+        <div id="game-over">
+            <h1>Game Over</h1>
+            <button id="restart">Restart</button>
+        </div>
+    </div>
+</body>
+</html>
